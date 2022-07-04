@@ -15,3 +15,5 @@ variable "dynamo_table_name" {
   description = "Name of the DynamoDB table. You should also change the mapping templates if you need to change it"
   default = "short-url"
 }
+
+variable "enable_authentication"
