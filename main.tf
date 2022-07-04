@@ -1,3 +1,6 @@
+# Getting the region we are running in 
+data "aws_region" "current" {}
+
 # creating a regional rest API
 resource "aws_api_gateway_rest_api" "url_shortner" {
   name        = var.api_gateway_name
@@ -23,7 +26,7 @@ resource "aws_api_gateway_method" "short_post" {
   rest_api_id   = aws_api_gateway_rest_api.url_shortner.id
   resource_id   = aws_api_gateway_resource.short.id
   http_method   = "POST"
-  authorization = "NONE"
+  authorization = "AWS_IAM"
 }
 
 #  integration request in post method in app resource
@@ -33,7 +36,7 @@ resource "aws_api_gateway_integration" "short_post_ireq" {
   http_method             = aws_api_gateway_method.short_post.http_method
   integration_http_method = "POST"
   type                    = "AWS"
-  uri                     = "arn:aws:apigateway:eu-west-1:dynamodb:action/UpdateItem"
+  uri                     = "arn:aws:apigateway:${data.aws_region.current}:dynamodb:action/UpdateItem"
 
   credentials = aws_iam_role.write_dynamo_role.arn
 
@@ -101,10 +104,10 @@ EOF
 }
 
 module "error-responses-positions" {
-  source = "./error-responses"
+  source         = "./error-responses"
   api_gateway_id = aws_api_gateway_rest_api.url_shortner.id
-  resource_id = aws_api_gateway_resource.short.id
-  http_method = aws_api_gateway_method.short_post.http_method
+  resource_id    = aws_api_gateway_resource.short.id
+  http_method    = aws_api_gateway_method.short_post.http_method
   depends_on = [
     aws_api_gateway_integration.short_post_ireq
   ]
@@ -136,7 +139,7 @@ resource "aws_api_gateway_integration" "slug_post_ireq" {
   http_method             = aws_api_gateway_method.slug-post.http_method
   integration_http_method = "POST"
   type                    = "AWS"
-  uri                     = "arn:aws:apigateway:eu-west-1:dynamodb:action/GetItem"
+  uri                     = "arn:aws:apigateway:${data.aws_region.current}:dynamodb:action/GetItem"
 
   credentials = aws_iam_role.read_dynamo_role.arn
 
